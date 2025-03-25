@@ -4,7 +4,7 @@ from flask_jwt_extended import JWTManager
 from config import Config
 from models import db
 from utils import mail
-from routes import api
+from routes import app as api_blueprint
 
 def create_app():
     app = Flask(__name__)
@@ -15,7 +15,7 @@ def create_app():
     db.init_app(app)
     mail.init_app(app)
     
-    app.register_blueprint(api, url_prefix='/api')
+    app.register_blueprint(api_blueprint, url_prefix='/api')
     
     return app
 
