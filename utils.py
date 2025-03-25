@@ -49,7 +49,7 @@ def send_custom_email(recipients, subject, body,
                       html_content=None, sender=None,
                       attachments=None, cc=None, bcc=None, reply_to=None,
                       date=None, charset=None, extra_headers=None,
-                      mail_options=None, rcpt_options=None, msgId=None, project=None):
+                      mail_options=None, rcpt_options=None, project=None):
     
     try:
         if project and project.mail_username and project.mail_password:
@@ -75,8 +75,7 @@ def send_custom_email(recipients, subject, body,
                      charset=charset,
                      extra_headers=extra_headers,
                      mail_options=mail_options,
-                     rcpt_options=rcpt_options,
-                     msgId=msgId)
+                     rcpt_options=rcpt_options)
 
         if attachments:
             for attachment in attachments:

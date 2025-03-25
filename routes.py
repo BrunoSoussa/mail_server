@@ -252,12 +252,10 @@ def send_custom_email_route():
         extra_headers = data.get('extra_headers')
         mail_options = data.get('mail_options')
         rcpt_options = data.get('rcpt_options')
-        msgId = data.get('msgId')
 
         send_custom_email(
             recipients=data['recipients'],
             subject=subject,
-        
             body=body,
             html_content=html_content,
             sender=sender,
@@ -270,7 +268,6 @@ def send_custom_email_route():
             extra_headers=extra_headers,
             mail_options=mail_options,
             rcpt_options=rcpt_options,
-            msgId=msgId,
             project=project
         )
 
