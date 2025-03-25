@@ -17,7 +17,7 @@ class Config:
     MAIL_USE_TLS = True
     CORS_RESOURCES = {
         r"/api/*": {
-            "origins": ["http://localhost:5000"],
+            "origins": ["*"],
             "methods": ["GET", "POST"],
             "allow_headers": ["Content-Type", "Authorization"]
         }
