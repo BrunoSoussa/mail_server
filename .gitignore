@@ -1,0 +1,10 @@
+# Ignorar o banco de dados SQLite
+users.db
+instance/users.db
+
+# Ignorar arquivos de ambiente
+.env
+
+# Ignorar caches do Python
+__pycache__/
+*.py[cod]
