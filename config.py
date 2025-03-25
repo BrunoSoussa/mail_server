@@ -1,9 +1,11 @@
 import os
 from datetime import timedelta
+import dotenv
 
 class Config:
-    SECRET_KEY = 'dev-secret-key-123'
-    JWT_SECRET_KEY = 'dev-jwt-secret-key-456'
+    dotenv.load_dotenv()
+    SECRET_KEY = os.getenv('SECRET_KEY')
+    JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY')
     JWT_TOKEN_LOCATION = ['headers']
     JWT_HEADER_NAME = 'Authorization'
     JWT_HEADER_TYPE = 'Bearer'
