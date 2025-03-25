@@ -1,8 +1,9 @@
-from flask import Blueprint, request, jsonify
-from flask_jwt_extended import create_access_token, jwt_required
+from flask import Blueprint, request, jsonify, render_template
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from models import db, User, Project, VerificationStatus
 from utils import is_valid_email, send_verification_email, serializer, send_custom_email
 from datetime import datetime, timedelta
+import os
 
 app = Blueprint('api', __name__)
 
@@ -220,6 +221,39 @@ def login():
         }), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@app.route('/admin-login', methods=['POST'])
+def admin_login():
+    data = request.get_json()
+    if not data or 'email' not in data or 'password' not in data:
+        return jsonify({'error': 'Email e senha são obrigatórios'}), 400
+    
+    admin_email = os.environ.get('ADMIN_EMAIL')
+    admin_password = os.environ.get('ADMIN_PASSWORD')
+    
+    if not admin_email or not admin_password:
+        return jsonify({'error': 'Credenciais de administrador não configuradas'}), 500
+    
+    if data['email'] != admin_email or data['password'] != admin_password:
+        return jsonify({'error': 'Credenciais inválidas'}), 401
+    
+    access_token = create_access_token(identity=admin_email)
+    return jsonify({'access_token': access_token}), 200
+
+@app.route('/projects', methods=['GET'])
+@jwt_required()
+def list_projects():
+    projects = Project.query.all()
+    return jsonify({
+        'projects': [{
+            'id': project.id,
+            'name': project.name,
+            'description': project.description,
+            'api_key': project.api_key,
+            'mail_username': project.mail_username,
+            'created_at': project.created_at.isoformat()
+        } for project in projects]
+    }), 200
 
 @app.route('/send-custom-email', methods=['POST'])
 @jwt_required()
