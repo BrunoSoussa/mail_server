@@ -4,9 +4,9 @@ from models import db, User, Project, VerificationStatus
 from utils import is_valid_email, send_verification_email, serializer, send_custom_email
 from datetime import datetime, timedelta
 
-api = Blueprint('api', __name__)
+app = Blueprint('api', __name__)
 
-@api.route('/register', methods=['POST'])
+@app.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
     if not data or 'email' not in data or 'api_key' not in data:
@@ -74,7 +74,7 @@ def register():
         print(f"Erro ao registrar usuário: {str(e)}")
         return jsonify({'error': f'Erro ao registrar usuário: {str(e)}'}), 500
 
-@api.route('/verify/<token>')
+@app.route('/verify/<token>')
 def verify_email(token):
     try:
         token_data = serializer.loads(token, salt='email-verification', max_age=3600)
@@ -112,7 +112,7 @@ def verify_email(token):
     except Exception as e:
         return jsonify({'error': 'Token inválido ou expirado'}), 400
 
-@api.route('/check-verification', methods=['POST'])
+@app.route('/check-verification', methods=['POST'])
 @jwt_required()
 def check_verification():
     email = request.args.get('email')
@@ -142,7 +142,7 @@ def check_verification():
         'verified_at': verification.verified_at.isoformat() if verification.verified_at else None
     })
 
-@api.route('/users')
+@app.route('/users')
 @jwt_required()
 def list_users():
     users = User.query.all()
@@ -153,7 +153,7 @@ def list_users():
         'created_at': user.created_at.isoformat()
     } for user in users])
 
-@api.route('/projects', methods=['POST'])
+@app.route('/projects', methods=['POST'])
 def create_project():
     data = request.get_json()
     if not data or 'name' not in data:
@@ -189,7 +189,7 @@ def create_project():
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
-@api.route('/login', methods=['POST'])
+@app.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
     if not data or 'api_key' not in data:
@@ -221,7 +221,7 @@ def login():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@api.route('/send-custom-email', methods=['POST'])
+@app.route('/send-custom-email', methods=['POST'])
 @jwt_required()
 def send_custom_email_route():
     data = request.get_json()
