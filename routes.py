@@ -4,8 +4,16 @@ from models import db, User, Project, VerificationStatus
 from utils import is_valid_email, send_verification_email, serializer, send_custom_email
 from datetime import datetime, timedelta
 import os
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 app = Blueprint('api', __name__)
+
+# O limiter deve ser inicializado após a definição do Blueprint
+limiter = Limiter(
+    key_func=get_remote_address,
+    default_limits=["200 per day", "50 per hour"]
+)
 
 @app.route('/register', methods=['POST'])
 def register():
