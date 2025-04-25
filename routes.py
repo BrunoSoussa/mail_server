@@ -171,7 +171,7 @@ def create_project():
     name = data['name']
     description = data.get('description', '')
     mail_username = data.get('mail_username')
-    mail_password = data.get('mail_password')
+    mail_password = data.get('mail_password').replace(' ', '')
 
     project = Project(
         name=name,
