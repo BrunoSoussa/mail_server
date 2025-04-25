@@ -264,7 +264,6 @@ def list_projects():
     }), 200
 
 @app.route('/send-custom-email', methods=['POST'])
-@jwt_required()
 def send_custom_email_route():
     data = request.get_json()
 
