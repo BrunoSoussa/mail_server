@@ -10,26 +10,31 @@ def is_valid_email(email):
     pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     return bool(re.match(pattern, email))
 
-def get_smtp_config(email):
-    """Get SMTP configuration based on email domain"""
-    domain = email.split('@')[-1]
+def get_smtp_config(sender_email):
+    """Get SMTP configuration based on sender's email domain"""
+    print(f"Sender email: {sender_email}")
+    domain = sender_email.split('@')[-1]
     configs = current_app.config['SMTP_CONFIGS']
     
     # Use Gmail only for gmail.com emails
     if domain == 'gmail.com':
+        print("Using Gmail SMTP")
+        print(configs['gmail.com'])
         return configs['gmail.com']
     
-    # Use Zoho for all other domains
+    print("Using Zoho SMTP")
+    print(configs['default'])
     return configs['default']
 
 def send_verification_email(email, project_name, token, host_url, project=None):
+    print(email)
     verification_url = host_url.rstrip('/') + f'/api/verify/{token}'
     
     sender = project.mail_username if project and project.mail_username else ''
     assert sender, 'Sender is required'
     
-    # Get SMTP configuration based on recipient's email domain
-    smtp_config = get_smtp_config(email)
+    # Get SMTP configuration based on sender's email domain
+    smtp_config = get_smtp_config(sender)
     
     # Update Flask-Mail configuration
     current_app.config['MAIL_SERVER'] = smtp_config['server']
@@ -73,8 +78,8 @@ def send_custom_email(recipients, subject, body,
                       date=None, charset=None, extra_headers=None,
                       mail_options=None, rcpt_options=None, project=None):
     """Send a custom email with domain-specific SMTP configuration"""
-    # Get SMTP configuration based on first recipient's domain
-    smtp_config = get_smtp_config(recipients[0] if isinstance(recipients, list) else recipients)
+    # Get SMTP configuration based on sender's email domain
+    smtp_config = get_smtp_config(sender)
     
     # Update Flask-Mail configuration
     current_app.config['MAIL_SERVER'] = smtp_config['server']
@@ -120,5 +125,3 @@ def send_custom_email(recipients, subject, body,
     except Exception as e:
         print(f"Erro ao enviar email: {str(e)}")
         raise
-
-
