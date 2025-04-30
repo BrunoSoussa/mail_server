@@ -283,7 +283,8 @@ def send_custom_email_route():
   
         body = data.get('body', '')
         html_content = data.get('html_content')
-        sender = data.get('sender', 'bruno1912200@gmail.com')
+        sender = data.get('sender')
+        assert sender, 'Sender is required'
         attachments = data.get('attachments')
         cc = data.get('cc')
         bcc = data.get('bcc')

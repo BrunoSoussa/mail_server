@@ -10,10 +10,31 @@ def is_valid_email(email):
     pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     return bool(re.match(pattern, email))
 
+def get_smtp_config(email):
+    """Get SMTP configuration based on email domain"""
+    domain = email.split('@')[-1]
+    configs = current_app.config['SMTP_CONFIGS']
+    
+    # Use Gmail only for gmail.com emails
+    if domain == 'gmail.com':
+        return configs['gmail.com']
+    
+    # Use Zoho for all other domains
+    return configs['default']
+
 def send_verification_email(email, project_name, token, host_url, project=None):
     verification_url = host_url.rstrip('/') + f'/api/verify/{token}'
     
-    sender = project.mail_username if project and project.mail_username else 'noreply@example.com'
+    sender = project.mail_username if project and project.mail_username else ''
+    assert sender, 'Sender is required'
+    
+    # Get SMTP configuration based on recipient's email domain
+    smtp_config = get_smtp_config(email)
+    
+    # Update Flask-Mail configuration
+    current_app.config['MAIL_SERVER'] = smtp_config['server']
+    current_app.config['MAIL_PORT'] = smtp_config['port']
+    current_app.config['MAIL_USE_TLS'] = smtp_config['use_tls']
     
     msg = Message('Confirme seu Email',
                  sender=sender,
@@ -35,6 +56,7 @@ def send_verification_email(email, project_name, token, host_url, project=None):
             current_app.config['MAIL_USERNAME'] = project.mail_username
             current_app.config['MAIL_PASSWORD'] = project.mail_password
             
+            
             # Criar uma nova instância do Mail com as configurações atualizadas
             project_mail = Mail(current_app)
             project_mail.send(msg)
@@ -50,39 +72,53 @@ def send_custom_email(recipients, subject, body,
                       attachments=None, cc=None, bcc=None, reply_to=None,
                       date=None, charset=None, extra_headers=None,
                       mail_options=None, rcpt_options=None, project=None):
+    """Send a custom email with domain-specific SMTP configuration"""
+    # Get SMTP configuration based on first recipient's domain
+    smtp_config = get_smtp_config(recipients[0] if isinstance(recipients, list) else recipients)
+    
+    # Update Flask-Mail configuration
+    current_app.config['MAIL_SERVER'] = smtp_config['server']
+    current_app.config['MAIL_PORT'] = smtp_config['port']
+    current_app.config['MAIL_USE_TLS'] = smtp_config['use_tls']
+    
+    msg = Message(subject,
+                 sender=sender,
+                 recipients=recipients,
+                 body=body,
+                 html=html_content,
+                 cc=cc,
+                 bcc=bcc,
+                 reply_to=reply_to,
+                 date=date,
+                 charset=charset,
+                 extra_headers=extra_headers,
+                 mail_options=mail_options,
+                 rcpt_options=rcpt_options)
+
+    if attachments:
+        for attachment in attachments:
+            msg.attach(*attachment)
+        
+    msg.reply_to = sender
+
+    if project and project.mail_username and project.mail_password:
+        # Configurar o Flask-Mail com as credenciais do projeto
+        current_app.config['MAIL_USERNAME'] = project.mail_username
+        current_app.config['MAIL_PASSWORD'] = project.mail_password
+        
+        # Criar uma nova instância do Mail com as configurações atualizadas
+        project_mail = Mail(current_app)
+        project_mail.send(msg)
+    else:
+        mail.send(msg)
+        
+    unsub_domain = (sender).split('@')[-1]
+    msg.extra_headers = {**(msg.extra_headers or {}), 'List-Unsubscribe': f'<mailto:unsubscribe@{unsub_domain}>'}
     
     try:
-        if project and project.mail_username and project.mail_password:
-            # Configurar o Flask-Mail com as credenciais do projeto
-            current_app.config['MAIL_USERNAME'] = project.mail_username
-            current_app.config['MAIL_PASSWORD'] = project.mail_password
-            sender = project.mail_username
-            
-            # Criar uma nova instância do Mail com as configurações atualizadas
-            project_mail = Mail(current_app)
-        else:
-            project_mail = mail
-            
-        msg = Message(subject,
-                     sender=sender,
-                     recipients=recipients,
-                     body=body,
-                     html=html_content,
-                     cc=cc,
-                     bcc=bcc,
-                     reply_to=reply_to,
-                     date=date,
-                     charset=charset,
-                     extra_headers=extra_headers,
-                     mail_options=mail_options,
-                     rcpt_options=rcpt_options)
-
-        if attachments:
-            for attachment in attachments:
-                msg.attach(*attachment)
-
-        project_mail.send(msg)
-        
+        pass
     except Exception as e:
         print(f"Erro ao enviar email: {str(e)}")
         raise
+
+

@@ -12,9 +12,21 @@ class Config:
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
     
     SQLALCHEMY_DATABASE_URI = 'sqlite:///users.db'
-    MAIL_SERVER = 'smtp.gmail.com'
-    MAIL_PORT = 587
-    MAIL_USE_TLS = True
+    SMTP_CONFIGS = {
+        'gmail.com': {
+            'server': 'smtp.gmail.com',
+            'port': 587,
+            'use_tls': True
+        },
+        'default': {
+            'server': 'smtp.zoho.com',
+            'port': 587,
+            'use_tls': True
+        }
+    }
+    MAIL_SERVER = SMTP_CONFIGS['default']['server']
+    MAIL_PORT = SMTP_CONFIGS['default']['port']
+    MAIL_USE_TLS = SMTP_CONFIGS['default']['use_tls']
     CORS_RESOURCES = {
         r"/api/*": {
             "origins": ["*"],
